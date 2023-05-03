@@ -9,8 +9,8 @@ import tensorflow as tf
 movies = pd.read_csv('movies.csv')
 
 # Clean the movie titles by removing extra whitespace and punctuation marks
-movies['title'] = movies['title'].str.strip()
-movies['title'] = movies['title'].str.replace('[^\w\s]', '')
+movies['title'] = movies['title'].str.replace('[^\w\s]', '', regex=True)
+
 
 # Load the ratings.csv file
 ratings = pd.read_csv('ratings.csv')
@@ -28,6 +28,7 @@ tags = tags.drop('timestamp', axis=1)
 data = pd.merge(movies, ratings, on='movieId')
 data = pd.merge(data, tags, on=['userId', 'movieId'])
 
+max_sequence_length = 200
 # Load the model
 model = tf.keras.models.load_model('MovieRecommendation_model.h5')
 
@@ -58,4 +59,4 @@ def recommend_movies(user_id):
 inputs = gr.inputs.Number(label="User ID")
 outputs = gr.outputs.Label(num_top_classes=10)
 
-gr.Interface(fn=recommend_movies, inputs=inputs, outputs=outputs, title="Movie Recommender", description="Enter a user ID to get movie recommendations").launch()
+gr.Interface(fn=recommend_movies, inputs=inputs, outputs=outputs, title="Movie Recommender", description="Enter a user ID to get movie recommendations").launch(share=True, debug=True)
