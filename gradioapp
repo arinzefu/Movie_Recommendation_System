@@ -1,0 +1,33 @@
+# here we use the model to create an app
+import gradio as gr
+# Load the model
+model = tf.keras.models.load_model('MovieRecommendation_model.h5')
+
+def recommend_movies(user_id):
+    # Get all the movies rated by the user
+    user_movies = data[data['userId'] == user_id]['movieId'].tolist()
+
+    # Get all the movies not rated by the user
+    unrated_movies = [movie_id for movie_id in data['movieId'].tolist() if movie_id not in user_movies]
+
+    # Create a dataset of user/movie pairs to predict ratings for
+    dataset = pd.DataFrame({'userId': [user_id] * len(unrated_movies), 'movieId': unrated_movies})
+
+    # Make predictions using the model
+    input_tensor = np.zeros((len(unrated_movies), max_sequence_length))
+    input_tensor[:, 0] = user_id
+    input_tensor[:, 1] = unrated_movies
+    dataset['predicted_rating'] = model.predict(input_tensor, batch_size=16).flatten()
+
+    # Get the top 10 movies with the highest predicted rating
+    top_movies = dataset.sort_values(by='predicted_rating', ascending=False).head(10)
+
+    # Get the movie titles for the recommended movies
+    recommended_movies = data[data['movieId'].isin(top_movies['movieId'].tolist())]['title'].tolist()
+
+    return recommended_movies
+
+inputs = gr.inputs.Number(label="User ID")
+outputs = gr.outputs.Label(num_top_classes=10)
+
+gr.Interface(fn=recommend_movies, inputs=inputs, outputs=outputs, title="Movie Recommender", description="Enter a user ID to get movie recommendations").launch()
