@@ -1,5 +1,33 @@
 # here we use the model to create an app
 import gradio as gr
+import pandas as pd
+import numpy as np
+import tensorflow as tf
+
+
+# Load the movies.csv file
+movies = pd.read_csv('movies.csv')
+
+# Clean the movie titles by removing extra whitespace and punctuation marks
+movies['title'] = movies['title'].str.strip()
+movies['title'] = movies['title'].str.replace('[^\w\s]', '')
+
+# Load the ratings.csv file
+ratings = pd.read_csv('ratings.csv')
+
+# Drop the timestamp column from the ratings dataframe
+ratings = ratings.drop('timestamp', axis=1)
+
+# Load the tags.csv file
+tags = pd.read_csv('tags.csv')
+
+# Drop the timestamp column from the tags dataframe
+tags = tags.drop('timestamp', axis=1)
+
+# Merge the movies, ratings, and tags data into a single DataFrame
+data = pd.merge(movies, ratings, on='movieId')
+data = pd.merge(data, tags, on=['userId', 'movieId'])
+
 # Load the model
 model = tf.keras.models.load_model('MovieRecommendation_model.h5')
 
